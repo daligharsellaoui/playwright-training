@@ -1,4 +1,7 @@
 import { test, expect } from '@playwright/test'
+import { GUEST } from '../test-data/users'
+
+test.use({ storageState: GUEST })
 
 test.describe('cart badge', () => {
   test.beforeEach(async ({ page }) => {

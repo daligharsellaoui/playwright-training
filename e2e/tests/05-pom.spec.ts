@@ -5,8 +5,9 @@ import { CartPage } from '../pages/CartPage'
 import { CheckoutPage } from '../pages/CheckoutPage'
 import { GUEST, SHIPPING, USERS } from '../test-data/users'
 
+test.use({ storageState: GUEST })
+
 test.describe('with UI login', () => {
-  test.use({ storageState: GUEST })
 
   test('buy two products', async ({ page }) => {
     const login = new LoginPage(page)
@@ -42,7 +43,6 @@ test.describe('with UI login', () => {
 // uses the same `sid` cookie: logging it out would break all the tests running after it.
 // So this test opens its own session instead of using the shared one.
 test.describe('logout', () => {
-  test.use({ storageState: GUEST })
 
   test('logout returns to the login page', async ({ page }) => {
     const login = new LoginPage(page)

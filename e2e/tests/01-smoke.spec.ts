@@ -1,4 +1,7 @@
 import { test, expect } from '@playwright/test'
+import { GUEST } from '../test-data/users'
+
+test.use({ storageState: GUEST })
 
 test('home page has the Demo Shop title', { tag: '@smoke' }, async ({ page }) => {
   await page.goto('/')

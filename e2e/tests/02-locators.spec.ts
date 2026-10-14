@@ -1,4 +1,7 @@
 import { test, expect } from '@playwright/test'
+import { GUEST } from '../test-data/users'
+
+test.use({ storageState: GUEST })
 
 test.describe('login with user-facing locators', () => {
   test('login with getByLabel and getByRole', async ({ page }) => {
