@@ -53,6 +53,9 @@ export default defineConfig({
       dependencies: ['setup'],
       testMatch: mobileProjects.map((p) => new RegExp(`${p}.*\\.spec\\.ts`)),
     },
+
+    // Screenshots depend on OS and fonts: only one browser, run on demand (npm run test:visual)
+    { name: 'visual', use: { ...devices['Desktop Chrome'], ...auth }, dependencies: ['setup'], testMatch: /visual/ },
   ],
   webServer: {
     command: 'npm start --prefix ../demo-shop',
