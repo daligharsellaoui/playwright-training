@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo Shop — Products</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="app-header"></header>
+  <main>
+    <div class="toolbar">
+      <h1>Products</h1>
+      <label>
+        Sort by
+        <select id="sort" data-testid="sort-select">
+          <option value="name-asc">Name (A to Z)</option>
+          <option value="name-desc">Name (Z to A)</option>
+          <option value="price-asc">Price (low to high)</option>
+          <option value="price-desc">Price (high to low)</option>
+        </select>
+      </label>
+    </div>
+    <p id="loading" role="status">Loading products…</p>
+    <div class="alert" role="alert" id="load-error" hidden></div>
+    <ul class="product-list" aria-label="Products"></ul>
+  </main>
+  <script src="/app.js"></script>
+  <script>
+    const list = document.querySelector('.product-list')
+    const sortSelect = document.getElementById('sort')
+    let products = []
+
+    const SORTERS = {
+      'name-asc': (a, b) => a.name.localeCompare(b.name),
+      'name-desc': (a, b) => b.name.localeCompare(a.name),
+      'price-asc': (a, b) => a.price - b.price,
+      'price-desc': (a, b) => b.price - a.price,
+    }
+
+    function render() {
+      const sorted = [...products].sort(SORTERS[sortSelect.value])
+      list.replaceChildren(
+        ...sorted.map((product) => {
+          const inCart = Cart.has(product.id)
+          const button = el(
+            'button',
+            {
+              type: 'button',
+              class: inCart ? 'secondary' : 'primary',
+              onClick: () => {
+                inCart ? Cart.remove(product.id) : Cart.add(product.id)
+                render()
+              },
+            },
+            inCart ? 'Remove' : 'Add to cart'
+          )
+          return el(
+            'li',
+            { class: 'card product', 'data-testid': 'product-card' },
+            el('h2', {}, product.name),
+            el('p', {}, product.description),
+            el('span', { class: 'price', 'data-testid': 'product-price' }, formatPrice(product.price)),
+            button
+          )
+        })
+      )
+    }
+
+    sortSelect.addEventListener('change', render)
+
+    api('/api/products')
+      .then((data) => {
+        products = data
+        render()
+      })
+      .catch((err) => {
+        const box = document.getElementById('load-error')
+        box.textContent = `Could not load products: ${err.message}`
+        box.hidden = false
+      })
+      .finally(() => (document.getElementById('loading').hidden = true))
+  </script>
+</body>
+</html>

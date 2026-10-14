@@ -1,0 +1,1099 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Formation Playwright — Guide pas à pas</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 20mm 16mm; }
+  :root { --ink: #1d1f23; --muted: #5b6270; --brand: #1d3557; --accent: #2a9d8f; --warn: #b5541c; --line: #dfe3ea; --code-bg: #f4f6f9; }
+  * { box-sizing: border-box; }
+  body { font-family: "Inter", "Segoe UI", system-ui, sans-serif; color: var(--ink); font-size: 10.5pt; line-height: 1.5; margin: 0; }
+  h1, h2, h3, h4 { color: var(--brand); line-height: 1.25; break-after: avoid; }
+  h1 { font-size: 22pt; margin: 0 0 6pt; }
+  h2 { font-size: 13pt; margin: 18pt 0 6pt; border-bottom: 1px solid var(--line); padding-bottom: 3pt; }
+  h3 { font-size: 11pt; margin: 14pt 0 4pt; }
+  p { margin: 5pt 0; }
+  ul, ol { margin: 4pt 0 6pt; padding-left: 18pt; }
+  li { margin: 2pt 0; }
+  code { font-family: "JetBrains Mono", "DejaVu Sans Mono", monospace; font-size: 8.8pt; background: var(--code-bg); padding: 0 3px; border-radius: 3px; }
+  pre { background: var(--code-bg); border: 1px solid var(--line); border-left: 3px solid var(--brand); border-radius: 4px; padding: 7pt 9pt; font-size: 8.4pt; line-height: 1.4; white-space: pre-wrap; word-break: break-word; break-inside: avoid; margin: 6pt 0; }
+  pre code { background: none; padding: 0; font-size: inherit; }
+  .file { display: block; font-family: "DejaVu Sans Mono", monospace; font-size: 7.8pt; color: var(--muted); margin: 8pt 0 -4pt; }
+  table { border-collapse: collapse; width: 100%; margin: 6pt 0; font-size: 9.5pt; break-inside: avoid; }
+  th, td { border: 1px solid var(--line); padding: 4pt 6pt; text-align: left; vertical-align: top; }
+  th { background: #eef1f6; }
+  .box { border-radius: 5px; padding: 7pt 10pt; margin: 8pt 0; break-inside: avoid; }
+  .tip { background: #e6f4f1; border-left: 4px solid var(--accent); }
+  .warn { background: #fbeee6; border-left: 4px solid var(--warn); }
+  .todo { background: #eef1f6; border-left: 4px solid var(--brand); }
+  .box > strong:first-child { display: block; margin-bottom: 2pt; }
+  .todo ul { list-style: none; padding-left: 4pt; }
+  .todo li::before { content: "☐  "; color: var(--brand); }
+  .meta { display: flex; gap: 14pt; font-size: 9pt; color: var(--muted); margin-bottom: 8pt; }
+  .meta span strong { color: var(--ink); }
+  .chapter { break-before: page; }
+  .kicker { text-transform: uppercase; letter-spacing: .08em; font-size: 8.5pt; color: var(--accent); font-weight: 700; margin-bottom: 2pt; }
+  .step { counter-increment: step; }
+  .step > h3::before { content: "Étape " counter(step) " — "; color: var(--accent); }
+  .chapter { counter-reset: step; }
+
+  /* Cover */
+  .cover { height: 250mm; display: flex; flex-direction: column; justify-content: center; }
+  .cover h1 { font-size: 34pt; margin-bottom: 10pt; }
+  .cover .sub { font-size: 14pt; color: var(--muted); margin-bottom: 30pt; }
+  .cover .band { height: 6px; width: 90px; background: var(--accent); margin-bottom: 20pt; }
+  .toc { columns: 2; column-gap: 24pt; font-size: 10pt; }
+  .toc li { break-inside: avoid; }
+  .diagram { font-family: "DejaVu Sans Mono", monospace; font-size: 8.6pt; background: #fff; border: 1px dashed var(--line); padding: 8pt; white-space: pre; break-inside: avoid; }
+</style>
+</head>
+<body>
+
+<!-- ============================ COVER ============================ -->
+<section class="cover">
+  <div class="band"></div>
+  <h1>Formation Playwright</h1>
+  <div class="sub">Guide pas à pas : de l'initiation à la CI<br>10 modules + bonus, sur l'application <strong>Demo Shop</strong></div>
+  <h3>Sommaire</h3>
+  <ol class="toc" start="0">
+    <li>Initiation : comprendre Playwright</li>
+    <li>Setup &amp; premier test</li>
+    <li>Ciblage avec les locators</li>
+    <li>Formulaires, panier &amp; popups</li>
+    <li>Assertions &amp; waiting</li>
+    <li>Page Object Model</li>
+    <li>StorageState &amp; fixtures</li>
+    <li>Outillage &amp; Trace Viewer</li>
+    <li>Interception &amp; mock API</li>
+    <li>Multi-navigateurs &amp; mobile</li>
+    <li>Intégration GitHub Actions</li>
+    <li>Bonus : visuel &amp; accessibilité</li>
+    <li>Annexe : aide-mémoire</li>
+  </ol>
+</section>
+
+<!-- ============================ 0. INITIATION ============================ -->
+<section class="chapter">
+  <div class="kicker">Module 0</div>
+  <h1>Initiation : comprendre Playwright</h1>
+  <div class="meta"><span><strong>Durée</strong> ~45 min de lecture</span><span><strong>Prérequis</strong> bases de JavaScript, <code>async/await</code></span></div>
+
+  <h2>Qu'est-ce que Playwright ?</h2>
+  <p>Playwright est un framework de tests end-to-end (E2E) open source maintenu par Microsoft. Il pilote de vrais navigateurs (<strong>Chromium</strong>, <strong>Firefox</strong>, <strong>WebKit</strong>) avec une seule API, et fournit son propre test runner, <code>@playwright/test</code> : parallélisme, retries, rapports, traces.</p>
+  <table>
+    <tr><th>Point fort</th><th>Ce que ça change pour toi</th></tr>
+    <tr><td>Auto-waiting</td><td>Avant chaque action, Playwright attend que l'élément soit visible, stable, activé et prêt à recevoir le clic. Pas de <code>sleep</code>.</td></tr>
+    <tr><td>Web-first assertions</td><td><code>expect(locator)</code> réessaie jusqu'à ce que la condition soit vraie, ou jusqu'au timeout.</td></tr>
+    <tr><td>Isolation</td><td>Chaque test reçoit un <em>browser context</em> neuf, comme un profil incognito : pas de cookies partagés entre tests.</td></tr>
+    <tr><td>Outillage</td><td>Codegen, UI mode, Inspector, Trace Viewer, rapport HTML.</td></tr>
+    <tr><td>Réseau</td><td>Interception, mock, et tests d'API sans navigateur.</td></tr>
+  </table>
+
+  <h2>Les trois niveaux : Browser, Context, Page</h2>
+  <div class="diagram">Browser  (un process Chromium / Firefox / WebKit, partagé par un worker)
+ ├── BrowserContext  (session isolée : cookies, localStorage, permissions)
+ │     ├── Page  (un onglet)
+ │     └── Page
+ └── BrowserContext  (le test suivant : tout neuf)
+       └── Page</div>
+  <p>Lancer un navigateur coûte cher, alors qu'un context se crée en quelques millisecondes. Playwright réutilise donc le navigateur et crée un context par test. C'est ce qui rend les tests à la fois rapides et indépendants.</p>
+
+  <h2>Anatomie d'un test</h2>
+<pre><code>import { test, expect } from '@playwright/test'
+
+test.describe('Login', () =&gt; {                        // groupe (optionnel)
+  test.beforeEach(async ({ page }) =&gt; {               // hook
+    await page.goto('/')
+  })
+
+  test('shows an error for a locked user', async ({ page }) =&gt; {
+    await page.getByLabel('Username').fill('locked_user')   // action (auto-wait)
+    await page.getByLabel('Password').fill('secret_sauce')
+    await page.getByRole('button', { name: 'Login' }).click()
+
+    await expect(page.getByRole('alert')).toContainText('locked out') // assertion (retry)
+  })
+})</code></pre>
+  <ul>
+    <li><code>{ page }</code> est une <strong>fixture</strong> : Playwright la crée avant le test et la nettoie après. Autres fixtures intégrées : <code>context</code>, <code>browser</code>, <code>request</code>, <code>browserName</code>…</li>
+    <li>Chaque action et chaque <code>expect(locator)</code> renvoie une Promise : <strong>toujours <code>await</code></strong>. Un <code>await</code> oublié est le bug n°1 du débutant.</li>
+  </ul>
+
+  <h2>Locator : une recette, pas un élément</h2>
+  <p><code>page.getByRole('button', { name: 'Login' })</code> ne cherche rien au moment où tu l'écris. C'est une <em>description</em>, évaluée à chaque utilisation. Tu peux donc créer un locator avant que l'élément existe, et le réutiliser après un re-render.</p>
+  <p>Un locator est <strong>strict</strong> : si une action vise un locator qui matche 2 éléments, Playwright lève une <code>strict mode violation</code> au lieu de cliquer au hasard.</p>
+
+  <h2>Auto-waiting et web-first assertions</h2>
+<pre><code>// ❌ Lit la valeur UNE fois, sans attendre : fragile
+expect(await page.getByTestId('cart-badge').textContent()).toBe('2')
+
+// ✅ Réessaie jusqu'à 5 s : robuste
+await expect(page.getByTestId('cart-badge')).toHaveText('2')
+
+// ❌ Jamais : attente arbitraire, lente ET fragile
+await page.waitForTimeout(2000)</code></pre>
+
+  <h2>Installer ton poste</h2>
+  <ol>
+    <li><strong>Node.js 18+</strong> : vérifie avec <code>node -v</code>.</li>
+    <li><strong>VS Code</strong> + l'extension officielle <em>Playwright Test for VS Code</em>, pour lancer et débugger les tests depuis l'éditeur.</li>
+    <li>Le dossier de formation : <code>~/playwright-training</code>.</li>
+  </ol>
+
+  <h2>L'application à tester : Demo Shop</h2>
+<pre><code>cd ~/playwright-training/demo-shop
+npm start          # → http://localhost:3000</code></pre>
+  <table>
+    <tr><th>Page</th><th>Contenu</th></tr>
+    <tr><td><code>/</code></td><td>Login : erreurs de validation, utilisateur bloqué, redirection si non connecté</td></tr>
+    <tr><td><code>/inventory.html</code></td><td>6 produits chargés via l'API (400 ms de latence), tri, « Add to cart »</td></tr>
+    <tr><td><code>/cart.html</code></td><td>Liste, total, « Remove », « Clear cart » (popup <strong>native</strong> <code>confirm()</code>)</td></tr>
+    <tr><td><code>/checkout.html</code></td><td>Formulaire validé, « Place order » (modale <strong>HTML</strong> <code>&lt;dialog&gt;</code>)</td></tr>
+    <tr><td><code>/complete.html</code></td><td>Confirmation avec numéro de commande</td></tr>
+  </table>
+  <table>
+    <tr><th>Compte (mdp <code>secret_sauce</code>)</th><th>Comportement</th></tr>
+    <tr><td><code>standard_user</code></td><td>Normal</td></tr>
+    <tr><td><code>locked_user</code></td><td>Refusé : « Sorry, this user has been locked out »</td></tr>
+    <tr><td><code>slow_user</code></td><td>Chaque appel API prend 3 s</td></tr>
+  </table>
+  <p><strong>API</strong> : <code>POST /api/login</code>, <code>POST /api/logout</code>, <code>GET /api/health</code>, <code>GET /api/me</code>, <code>GET /api/products</code>, <code>GET /api/products/:id</code>, <code>POST /api/orders</code>.<br>
+  <strong>État</strong> : session dans un cookie <code>sid</code> (serveur), panier dans le <code>localStorage</code> (clé <code>cart</code>).</p>
+
+  <div class="box tip"><strong>Méthode de travail</strong>Un commit git par module. Lis l'étape, tape le code toi-même (pas de copier-coller : c'est en tapant qu'on retient), lance, casse-le volontairement, puis passe à la section « À toi ».</div>
+</section>
+
+<!-- ============================ 1. SETUP ============================ -->
+<section class="chapter">
+  <div class="kicker">Module 1</div>
+  <h1>Setup &amp; premier test</h1>
+  <div class="meta"><span><strong>Durée</strong> ~45 min</span><span><strong>Notions</strong> init, config, webServer, CLI, UI mode</span></div>
+
+  <div class="step">
+    <h3>Initialiser le projet</h3>
+<pre><code>cd ~/playwright-training
+npm init playwright@latest e2e</code></pre>
+    <p>Réponds : <strong>TypeScript</strong> · dossier <code>tests</code> · GitHub Actions <strong>non</strong> (on l'écrit au module 10) · installer les navigateurs <strong>oui</strong>.</p>
+    <p>Résultat : <code>e2e/playwright.config.ts</code>, <code>e2e/tests/example.spec.ts</code>, <code>e2e/package.json</code>. Lis <code>example.spec.ts</code>, puis supprime-le.</p>
+  </div>
+
+  <div class="step">
+    <h3>Configurer</h3>
+    <p>Remplace le contenu de la config par l'essentiel. Chaque ligne compte, lis les commentaires.</p>
+<span class="file">e2e/playwright.config.ts</span>
+<pre><code>import { defineConfig, devices } from '@playwright/test'
+
+export default defineConfig({
+  testDir: './tests',
+  fullyParallel: true,                 // les tests d'un même fichier tournent aussi en parallèle
+  forbidOnly: !!process.env.CI,        // un test.only oublié fait échouer la CI
+  retries: process.env.CI ? 2 : 0,
+  reporter: 'html',
+  use: {
+    baseURL: 'http://localhost:3000',  // permet page.goto('/')
+    trace: 'on-first-retry',
+  },
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+  ],
+  webServer: {                         // Playwright démarre l'app tout seul
+    command: 'npm start --prefix ../demo-shop',
+    url: 'http://localhost:3000/api/health',
+    reuseExistingServer: !process.env.CI,
+  },
+})</code></pre>
+  </div>
+
+  <div class="step">
+    <h3>Premier test</h3>
+<span class="file">e2e/tests/smoke.spec.ts</span>
+<pre><code>import { test, expect } from '@playwright/test'
+
+test('home page has the Demo Shop title', async ({ page }) =&gt; {
+  await page.goto('/')
+  await expect(page).toHaveTitle(/Demo Shop/)
+})</code></pre>
+  </div>
+
+  <div class="step">
+    <h3>Lancer de trois façons</h3>
+<pre><code>cd e2e
+npx playwright test               # headless, rapide
+npx playwright test --headed      # tu vois le navigateur
+npx playwright test --ui          # UI mode : watch, timeline, pick locator
+npx playwright show-report        # rapport HTML du dernier run</code></pre>
+    <div class="box tip"><strong>Adopte l'UI mode tout de suite</strong>Clique sur l'œil (watch) à côté d'un test : il se relance à chaque sauvegarde. C'est la boucle de travail la plus rapide.</div>
+  </div>
+
+  <div class="box todo"><strong>À toi</strong><ul>
+    <li>Fais échouer le test (titre attendu <code>/Shop Demo/</code>) et lis le message d'erreur.</li>
+    <li>Ajoute un 2<sup>e</sup> test : <code>/api/health</code> répond (<code>page.goto</code> renvoie une réponse : <code>expect(response?.ok()).toBe(true)</code>).</li>
+    <li>Lance un seul test : <code>npx playwright test smoke -g "title"</code>.</li>
+  </ul></div>
+  <div class="box warn"><strong>Checkpoint</strong>Le test est vert alors que tu n'as <em>pas</em> démarré l'app à la main : c'est <code>webServer</code> qui l'a fait.</div>
+</section>
+
+<!-- ============================ 2. LOCATORS ============================ -->
+<section class="chapter">
+  <div class="kicker">Module 2</div>
+  <h1>Ciblage avec les locators</h1>
+  <div class="meta"><span><strong>Durée</strong> ~1 h 30</span><span><strong>Notions</strong> getByRole, getByLabel, getByTestId, filter, chaînage, codegen</span></div>
+
+  <h2>Ordre de priorité</h2>
+  <table>
+    <tr><th>#</th><th>Locator</th><th>Quand</th></tr>
+    <tr><td>1</td><td><code>getByRole(role, { name })</code></td><td>Par défaut : boutons, liens, titres, champs, dialogues. Reflète ce que voit l'utilisateur et ce qu'expose l'accessibilité.</td></tr>
+    <tr><td>2</td><td><code>getByLabel</code>, <code>getByPlaceholder</code>, <code>getByText</code></td><td>Champs de formulaire, texte non interactif</td></tr>
+    <tr><td>3</td><td><code>getByTestId</code></td><td>Pas de rôle ni de texte stable (badge, conteneurs)</td></tr>
+    <tr><td>4</td><td><code>locator('css')</code></td><td>Dernier recours, avec un commentaire qui justifie</td></tr>
+  </table>
+
+  <div class="step">
+    <h3>Explorer avec codegen</h3>
+<pre><code>npx playwright codegen localhost:3000</code></pre>
+    <p>Connecte-toi et ajoute un produit : codegen écrit le code en direct. Remarque qu'il choisit <code>getByRole</code> dès qu'il peut. Ne garde pas ce code tel quel : il sert à apprendre et à trouver des locators.</p>
+  </div>
+
+  <div class="step">
+    <h3>Du CSS fragile aux locators utilisateur</h3>
+<span class="file">e2e/tests/login.spec.ts</span>
+<pre><code>import { test, expect } from '@playwright/test'
+
+// ❌ Version 1 : couplée à l'implémentation (un id renommé casse le test)
+test('login with CSS selectors', async ({ page }) =&gt; {
+  await page.goto('/')
+  await page.locator('#user-name').fill('standard_user')
+  await page.locator('#password').fill('secret_sauce')
+  await page.locator('#login-button').click()
+  await expect(page).toHaveURL(/inventory/)
+})
+
+// ✅ Version 2 : ce que voit l'utilisateur
+test('login with user-facing locators', async ({ page }) =&gt; {
+  await page.goto('/')
+  await page.getByLabel('Username').fill('standard_user')
+  await page.getByLabel('Password').fill('secret_sauce')
+  await page.getByRole('button', { name: 'Login' }).click()
+  await expect(page).toHaveURL(/inventory/)
+})</code></pre>
+    <p>Bonus : écris une version 3 avec <code>getByTestId('username')</code> / <code>getByTestId('password')</code>.</p>
+  </div>
+
+  <div class="step">
+    <h3>Ciblage dynamique d'un produit</h3>
+    <p>Les 6 produits ont tous un bouton « Add to cart ». <code>page.getByRole('button', { name: 'Add to cart' }).click()</code> lève donc une <em>strict mode violation</em>. Il faut d'abord <strong>filtrer la carte</strong>, puis chercher <strong>dans</strong> la carte.</p>
+<pre><code>test('add a specific product to the cart', async ({ page }) =&gt; {
+  // (login comme ci-dessus)
+  const card = page.getByTestId('product-card').filter({ hasText: 'Bolt T-Shirt' })
+  await card.getByRole('button', { name: 'Add to cart' }).click()
+  await expect(card.getByRole('button', { name: 'Remove' })).toBeVisible()
+})</code></pre>
+    <p>Factorise le filtre dans une fonction réutilisable :</p>
+<pre><code>import type { Page } from '@playwright/test'
+
+export const productCard = (page: Page, name: string) =&gt;
+  page.getByTestId('product-card')
+    .filter({ has: page.getByRole('heading', { name, exact: true }) })</code></pre>
+    <div class="box tip"><strong>Pourquoi <code>has</code> + <code>exact</code> plutôt que <code>hasText</code> ?</strong><code>hasText: 'T-Shirt'</code> matche « Bolt T-Shirt » <em>et</em> « Red T-Shirt ». Filtrer sur le titre exact ne laisse aucune ambiguïté.</div>
+  </div>
+
+  <div class="step">
+    <h3>Pick locator</h3>
+    <p>En UI mode, clique sur l'icône cible « Pick locator », puis survole un élément de la page : Playwright te propose le meilleur locator. Utile quand tu hésites.</p>
+  </div>
+
+  <div class="box todo"><strong>À toi</strong><ul>
+    <li>Vérifie qu'il y a 6 cartes : <code>await expect(page.getByTestId('product-card')).toHaveCount(6)</code>.</li>
+    <li>Lis le prix de « Fleece Jacket » via <code>productCard()</code>, et vérifie <code>$49.99</code>.</li>
+    <li>Trouve le titre « Products » avec <code>getByRole('heading')</code>.</li>
+    <li>Trouve le select de tri avec <code>getByLabel('Sort by')</code>.</li>
+  </ul></div>
+  <div class="box warn"><strong>Checkpoint</strong>Plus aucun <code>#id</code> ni <code>.classe</code> dans tes tests, sauf la version 1 « à ne pas faire ».</div>
+</section>
+
+<!-- ============================ 3. FORMS ============================ -->
+<section class="chapter">
+  <div class="kicker">Module 3</div>
+  <h1>Formulaires, panier &amp; popups</h1>
+  <div class="meta"><span><strong>Durée</strong> ~1 h 30</span><span><strong>Notions</strong> fill, click, selectOption, press, dialogs natifs vs HTML</span></div>
+
+  <div class="step">
+    <h3>Le parcours d'achat complet</h3>
+<span class="file">e2e/tests/checkout.spec.ts</span>
+<pre><code>import { test, expect } from '@playwright/test'
+
+test.beforeEach(async ({ page }) =&gt; {
+  await page.goto('/')
+  await page.getByLabel('Username').fill('standard_user')
+  await page.getByLabel('Password').fill('secret_sauce')
+  await page.getByLabel('Password').press('Enter')      // valide le formulaire au clavier
+  await expect(page).toHaveURL(/inventory/)
+})
+
+test('buy two products', async ({ page }) =&gt; {
+  for (const name of ['Backpack', 'Onesie']) {
+    await page.getByTestId('product-card').filter({ hasText: name })
+      .getByRole('button', { name: 'Add to cart' }).click()
+  }
+  await page.getByRole('link', { name: /Cart/ }).click()
+  await page.getByRole('button', { name: 'Checkout' }).click()
+
+  await page.getByLabel('First name').fill('Ada')
+  await page.getByLabel('Last name').fill('Lovelace')
+  await page.getByLabel('Postal code').fill('75001')
+  await page.getByRole('button', { name: 'Place order' }).click()
+
+  // Modale HTML (&lt;dialog&gt;) : un élément du DOM comme un autre
+  const dialog = page.getByRole('dialog', { name: 'Confirm your order' })
+  await dialog.getByRole('button', { name: 'Confirm' }).click()
+
+  await expect(page.getByRole('heading', { name: 'Thank you for your order!' })).toBeVisible()
+})</code></pre>
+  </div>
+
+  <div class="step">
+    <h3>Comprendre les deux types de popup</h3>
+    <table>
+      <tr><th></th><th>Modale HTML <code>&lt;dialog&gt;</code></th><th>Popup native <code>confirm()</code></th></tr>
+      <tr><td>Dans l'app</td><td>« Place order »</td><td>« Clear cart »</td></tr>
+      <tr><td>Nature</td><td>Élément du DOM</td><td>Fenêtre du navigateur, hors DOM</td></tr>
+      <tr><td>En Playwright</td><td><code>getByRole('dialog')</code></td><td><code>page.on('dialog')</code> / <code>page.once</code></td></tr>
+      <tr><td>Par défaut</td><td>Reste ouverte</td><td><strong>Refusée automatiquement</strong> si aucun handler</td></tr>
+    </table>
+<pre><code>test('clear cart: accept the native confirm', async ({ page }) =&gt; {
+  await page.getByRole('button', { name: 'Add to cart' }).first().click()
+  await page.goto('/cart.html')
+
+  page.once('dialog', async (dialog) =&gt; {           // handler AVANT le clic
+    expect(dialog.message()).toBe('Remove all items from your cart?')
+    await dialog.accept()
+  })
+  await page.getByRole('button', { name: 'Clear cart' }).click()
+
+  await expect(page.getByText('Your cart is empty.')).toBeVisible()
+})</code></pre>
+  </div>
+
+  <div class="step">
+    <h3>Listes déroulantes</h3>
+<pre><code>await page.getByLabel('Sort by').selectOption('price-asc')   // par value
+await page.getByLabel('Sort by').selectOption({ label: 'Price (high to low)' })</code></pre>
+  </div>
+
+  <div class="box todo"><strong>À toi</strong><ul>
+    <li>« Cancel » dans la modale : tu restes sur <code>/checkout.html</code>, la modale est cachée.</li>
+    <li>Popup native refusée (<code>dialog.dismiss()</code>) : le panier garde ses articles.</li>
+    <li>Après tri « Price (low to high) », le 1<sup>er</sup> produit est « Onesie ».</li>
+    <li>« Add to cart » puis « Remove » sur le même produit : le bouton revient à « Add to cart ».</li>
+    <li>Le bouton « Continue shopping » ramène aux produits.</li>
+  </ul></div>
+</section>
+
+<!-- ============================ 4. ASSERTIONS ============================ -->
+<section class="chapter">
+  <div class="kicker">Module 4</div>
+  <h1>Assertions &amp; waiting</h1>
+  <div class="meta"><span><strong>Durée</strong> ~1 h 30</span><span><strong>Notions</strong> web-first assertions, timeouts, tests paramétrés, soft assertions</span></div>
+
+  <h2>Les assertions à connaître</h2>
+  <table>
+    <tr><th>Assertion</th><th>Usage</th></tr>
+    <tr><td><code>toBeVisible</code> / <code>toBeHidden</code></td><td>Présence à l'écran</td></tr>
+    <tr><td><code>toHaveText</code> / <code>toContainText</code></td><td>Texte exact / partiel (string ou RegExp, ou tableau pour une liste)</td></tr>
+    <tr><td><code>toHaveCount</code></td><td>Nombre d'éléments</td></tr>
+    <tr><td><code>toHaveURL</code> / <code>toHaveTitle</code></td><td>Navigation</td></tr>
+    <tr><td><code>toBeEnabled</code> / <code>toBeDisabled</code></td><td>État d'un bouton</td></tr>
+    <tr><td><code>toHaveValue</code> / <code>toHaveAttribute</code></td><td>Champs, attributs ARIA</td></tr>
+    <tr><td><code>expect.soft</code></td><td>Ne stoppe pas le test au premier échec</td></tr>
+    <tr><td><code>expect.poll</code></td><td>Réessaie une fonction quelconque (ex. un appel API)</td></tr>
+  </table>
+
+  <div class="step">
+    <h3>Badge du panier et redirection</h3>
+<pre><code>const badge = page.getByTestId('cart-badge')
+await expect(badge).toBeHidden()             // panier vide : badge caché
+// ... ajoute 2 produits
+await expect(badge).toHaveText('2')
+
+test('protected page redirects to login', async ({ page }) =&gt; {
+  await page.goto('/cart.html')
+  await expect(page).toHaveURL('/?redirected=1')
+  await expect(page.getByText('You must log in to access this page.')).toBeVisible()
+})</code></pre>
+  </div>
+
+  <div class="step">
+    <h3>Tests paramétrés : les erreurs de login</h3>
+<pre><code>const cases = [
+  { title: 'empty form',     user: '',             pwd: '',             error: 'Username is required' },
+  { title: 'no password',    user: 'standard_user', pwd: '',             error: 'Password is required' },
+  { title: 'wrong password', user: 'standard_user', pwd: 'nope',         error: 'Username and password do not match any user' },
+  { title: 'locked user',    user: 'locked_user',   pwd: 'secret_sauce', error: 'Sorry, this user has been locked out' },
+]
+
+for (const { title, user, pwd, error } of cases) {
+  test(`login error: ${title}`, async ({ page }) =&gt; {
+    await page.goto('/')
+    await page.getByLabel('Username').fill(user)
+    await page.getByLabel('Password').fill(pwd)
+    await page.getByRole('button', { name: 'Login' }).click()
+    await expect(page.getByRole('alert')).toContainText(error)
+  })
+}</code></pre>
+  </div>
+
+  <div class="step">
+    <h3>Vérifier un tri (le seul cas où on lit « à la main »)</h3>
+<pre><code>await page.getByLabel('Sort by').selectOption('price-asc')
+const prices = page.getByTestId('product-price')
+await expect(prices).toHaveCount(6)            // ⚠️ attendre AVANT de lire
+const values = (await prices.allTextContents()).map((p) =&gt; Number(p.replace('$', '')))
+expect(values).toEqual([...values].sort((a, b) =&gt; a - b))</code></pre>
+    <div class="box warn"><strong>Piège</strong><code>allTextContents()</code> n'attend pas. Sans le <code>toHaveCount(6)</code> avant, tu lis peut-être une liste vide, puisque l'API répond en 400 ms.</div>
+  </div>
+
+  <div class="step">
+    <h3>Gérer un utilisateur lent</h3>
+<pre><code>test('slow user can still log in', async ({ page }) =&gt; {
+  test.slow()                                   // triple le timeout de CE test
+  // ... login avec slow_user
+  await expect(page.getByTestId('product-card')).toHaveCount(6, { timeout: 15_000 })
+})</code></pre>
+    <p>Ajuste le timeout <strong>localement</strong>, là où la lenteur est connue. Augmenter le timeout global masquerait de vrais problèmes de performance.</p>
+  </div>
+
+  <div class="box todo"><strong>À toi</strong><ul>
+    <li>Validation du checkout : soumission vide → 3 messages d'erreur, et <code>toHaveAttribute('aria-invalid', 'true')</code>.</li>
+    <li>Code postal <code>123</code> → « Postal code must be 5 digits ».</li>
+    <li>Total Backpack + Onesie = <code>$37.98</code>, dans le panier et dans la modale.</li>
+    <li>Le bouton « Close error » ferme le message de login.</li>
+    <li>Ajoute <code>waitForTimeout(2000)</code>, constate le temps perdu, puis retire-le.</li>
+  </ul></div>
+</section>
+
+<!-- ============================ 5. POM ============================ -->
+<section class="chapter">
+  <div class="kicker">Module 5</div>
+  <h1>Page Object Model</h1>
+  <div class="meta"><span><strong>Durée</strong> ~2 h</span><span><strong>Notions</strong> classes, encapsulation, composants, données de test</span></div>
+
+  <p>Le POM regroupe <strong>les locators et les actions</strong> d'une page dans une classe. Si l'UI change, tu corriges un seul endroit, et les tests se lisent comme un scénario métier.</p>
+<div class="diagram">e2e/
+  pages/
+    LoginPage.ts  InventoryPage.ts  CartPage.ts  CheckoutPage.ts
+    components/Header.ts        ← badge, lien panier, logout, burger
+  test-data/users.ts
+  tests/</div>
+
+  <div class="step">
+    <h3>Les données de test</h3>
+<span class="file">e2e/test-data/users.ts</span>
+<pre><code>export const PASSWORD = 'secret_sauce'
+export const USERS = {
+  standard: { username: 'standard_user', password: PASSWORD },
+  locked:   { username: 'locked_user',   password: PASSWORD },
+  slow:     { username: 'slow_user',     password: PASSWORD },
+} as const</code></pre>
+  </div>
+
+  <div class="step">
+    <h3>Une première page : LoginPage</h3>
+<span class="file">e2e/pages/LoginPage.ts</span>
+<pre><code>import type { Locator, Page } from '@playwright/test'
+
+export class LoginPage {
+  readonly username: Locator
+  readonly password: Locator
+  readonly submit: Locator
+  readonly error: Locator
+
+  constructor(private readonly page: Page) {
+    this.username = page.getByLabel('Username')
+    this.password = page.getByLabel('Password')
+    this.submit = page.getByRole('button', { name: 'Login' })
+    this.error = page.getByRole('alert')
+  }
+
+  async goto() {
+    await this.page.goto('/')
+  }
+
+  async login(username: string, password: string) {
+    await this.username.fill(username)
+    await this.password.fill(password)
+    await this.submit.click()
+  }
+}</code></pre>
+  </div>
+
+  <div class="step">
+    <h3>Une page avec des méthodes paramétrées : InventoryPage</h3>
+<span class="file">e2e/pages/InventoryPage.ts</span>
+<pre><code>import type { Locator, Page } from '@playwright/test'
+import { Header } from './components/Header'
+
+export class InventoryPage {
+  readonly header: Header
+  readonly cards: Locator
+
+  constructor(private readonly page: Page) {
+    this.header = new Header(page)
+    this.cards = page.getByTestId('product-card')
+  }
+
+  async goto() {
+    await this.page.goto('/inventory.html')
+  }
+
+  productCard(name: string) {
+    return this.cards.filter({ has: this.page.getByRole('heading', { name, exact: true }) })
+  }
+
+  async addToCart(name: string) {
+    await this.productCard(name).getByRole('button', { name: 'Add to cart' }).click()
+  }
+
+  // TODO: removeFromCart(name), sortBy(value), prices()
+}</code></pre>
+<span class="file">e2e/pages/components/Header.ts</span>
+<pre><code>import type { Locator, Page } from '@playwright/test'
+
+export class Header {
+  readonly cartBadge: Locator
+  readonly cartLink: Locator
+
+  constructor(private readonly page: Page) {
+    this.cartBadge = page.getByTestId('cart-badge')
+    this.cartLink = page.getByRole('link', { name: /Cart/ })
+  }
+
+  async openCart() {
+    await this.cartLink.click()
+  }
+  // TODO: logout()
+}</code></pre>
+  </div>
+
+  <div class="step">
+    <h3>Le test réécrit</h3>
+<pre><code>test('buy two products', async ({ page }) =&gt; {
+  const login = new LoginPage(page)
+  const inventory = new InventoryPage(page)
+  const cart = new CartPage(page)
+  const checkout = new CheckoutPage(page)
+
+  await login.goto()
+  await login.login(USERS.standard.username, USERS.standard.password)
+  await inventory.addToCart('Backpack')
+  await inventory.addToCart('Onesie')
+  await expect(inventory.header.cartBadge).toHaveText('2')
+  await inventory.header.openCart()
+  await cart.checkout()
+  await checkout.fillShipping({ firstName: 'Ada', lastName: 'Lovelace', postalCode: '75001' })
+  await checkout.placeOrder()
+  await expect(checkout.confirmDialog).toContainText('$37.98')
+  await checkout.confirm()
+  await expect(page.getByRole('heading', { name: 'Thank you for your order!' })).toBeVisible()
+})</code></pre>
+  </div>
+
+  <div class="box tip"><strong>Règles de bon POM</strong>
+    <ul style="list-style: disc; padding-left: 16pt;">
+      <li>Les méthodes expriment une <strong>intention</strong> (<code>addToCart('Backpack')</code>), pas un geste (<code>clickButton3()</code>).</li>
+      <li>Pas d'<code>expect</code> dans les POM pour commencer : ils exposent des locators, et les tests vérifient.</li>
+      <li>Pas de <code>if</code> ni de logique de test dans les POM.</li>
+    </ul>
+  </div>
+
+  <div class="box todo"><strong>À toi</strong><ul>
+    <li>Termine <code>InventoryPage</code>, puis écris <code>CartPage</code> (<code>items</code>, <code>total</code>, <code>remove</code>, <code>clear({ accept })</code>, <code>checkout</code>) et <code>CheckoutPage</code>.</li>
+    <li>Migre tous les tests des modules 2 à 4.</li>
+    <li>Checkpoint : <code>grep -r "getBy" tests/</code> ne renvoie (presque) rien.</li>
+  </ul></div>
+</section>
+
+<!-- ============================ 6. AUTH & FIXTURES ============================ -->
+<section class="chapter">
+  <div class="kicker">Module 6</div>
+  <h1>StorageState &amp; fixtures</h1>
+  <div class="meta"><span><strong>Durée</strong> ~2 h</span><span><strong>Notions</strong> projet setup, dependencies, storageState, test.extend</span></div>
+
+  <h2>Le problème</h2>
+  <p>Chaque test se reconnecte par l'UI : c'est lent, et ça teste le login 50 fois. La solution est de se connecter <strong>une fois</strong>, de sauvegarder l'état du navigateur (cookies + localStorage) dans un fichier JSON, puis de démarrer chaque test avec cet état.</p>
+
+  <div class="step">
+    <h3>Le fichier de setup</h3>
+<span class="file">e2e/tests/auth.setup.ts</span>
+<pre><code>import { test as setup, expect } from '@playwright/test'
+import { USERS } from '../test-data/users'
+
+const authFile = '.auth/user.json'
+
+setup('authenticate', async ({ page }) =&gt; {
+  await page.goto('/')
+  await page.getByLabel('Username').fill(USERS.standard.username)
+  await page.getByLabel('Password').fill(USERS.standard.password)
+  await page.getByRole('button', { name: 'Login' }).click()
+  await expect(page).toHaveURL(/inventory/)   // attendre que le cookie soit posé
+  await page.context().storageState({ path: authFile })
+})</code></pre>
+  </div>
+
+  <div class="step">
+    <h3>Brancher le setup dans la config</h3>
+<pre><code>projects: [
+  { name: 'setup', testMatch: /.*\.setup\.ts/ },
+  {
+    name: 'chromium',
+    use: { ...devices['Desktop Chrome'], storageState: '.auth/user.json' },
+    dependencies: ['setup'],          // setup tourne toujours avant
+  },
+],</code></pre>
+    <p>Ajoute <code>.auth/</code> au <code>.gitignore</code> : ce fichier contient une session valide. Ouvre-le et repère le cookie <code>sid</code>.</p>
+  </div>
+
+  <div class="step">
+    <h3>Exclure les tests de login</h3>
+<pre><code>// en haut de login.spec.ts : ces tests partent d'un navigateur vierge
+test.use({ storageState: { cookies: [], origins: [] } })</code></pre>
+  </div>
+
+  <div class="step">
+    <h3>Variante rapide : login par l'API</h3>
+<pre><code>setup('authenticate via API', async ({ request }) =&gt; {
+  const response = await request.post('/api/login', { data: USERS.standard })
+  expect(response.ok()).toBeTruthy()
+  await request.storageState({ path: authFile })    // récupère le cookie sid
+})</code></pre>
+    <p>On passe de ~1 s à ~50 ms. Le login UI reste couvert par <code>login.spec.ts</code>.</p>
+  </div>
+
+  <div class="step">
+    <h3>Custom fixtures : injecter les pages</h3>
+<span class="file">e2e/fixtures/index.ts</span>
+<pre><code>import { test as base } from '@playwright/test'
+import { InventoryPage } from '../pages/InventoryPage'
+import { CartPage } from '../pages/CartPage'
+
+type Fixtures = {
+  inventoryPage: InventoryPage
+  cartPage: CartPage
+}
+
+export const test = base.extend&lt;Fixtures&gt;({
+  inventoryPage: async ({ page }, use) =&gt; {
+    const inventoryPage = new InventoryPage(page)
+    await inventoryPage.goto()                // setup
+    await use(inventoryPage)                  // le test s'exécute ici
+    // teardown éventuel après use()
+  },
+  cartPage: async ({ page }, use) =&gt; {
+    await use(new CartPage(page))
+  },
+})
+
+export { expect } from '@playwright/test'</code></pre>
+<pre><code>import { test, expect } from '../fixtures'
+
+test('add to cart updates the badge', async ({ inventoryPage }) =&gt; {
+  await inventoryPage.addToCart('Backpack')
+  await expect(inventoryPage.header.cartBadge).toHaveText('1')
+})</code></pre>
+    <p>Une fixture n'est créée <strong>que si un test la demande</strong>. Les fixtures peuvent dépendre les unes des autres (<code>cartPage</code> peut demander <code>inventoryPage</code>).</p>
+  </div>
+
+  <div class="box todo"><strong>À toi</strong><ul>
+    <li>Fixture <code>cartWithItems</code> : remplis le panier sans passer par l'UI, avec <code>page.addInitScript(() =&gt; localStorage.setItem('cart', '[1,5]'))</code>.</li>
+    <li>Fixture <code>lockedUserPage</code>.</li>
+    <li>Question : pourquoi la <em>session</em> est-elle partagée entre tests, mais pas le <em>panier</em> ? (Indice : chaque test reçoit son propre context, initialisé avec une <strong>copie</strong> du fichier.)</li>
+  </ul></div>
+  <div class="box warn"><strong>Checkpoint</strong>Dans le rapport, un seul test <code>authenticate</code> par run, et plus aucun login UI hors de <code>login.spec.ts</code>.</div>
+</section>
+
+<!-- ============================ 7. DEBUG ============================ -->
+<section class="chapter">
+  <div class="kicker">Module 7</div>
+  <h1>Outillage &amp; Trace Viewer</h1>
+  <div class="meta"><span><strong>Durée</strong> ~1 h</span><span><strong>Notions</strong> trace, screenshot, vidéo, Inspector, test.step</span></div>
+
+  <div class="step">
+    <h3>Activer les artefacts de débogage</h3>
+<pre><code>retries: 1,
+use: {
+  baseURL: 'http://localhost:3000',
+  trace: 'on-first-retry',          // 'on' pour tout tracer pendant l'apprentissage
+  screenshot: 'only-on-failure',
+  video: 'retain-on-failure',
+},</code></pre>
+  </div>
+
+  <div class="step">
+    <h3>Provoquer trois échecs différents</h3>
+    <table>
+      <tr><th>Échec</th><th>Code</th><th>Ce que tu dois observer</th></tr>
+      <tr><td>Mauvais locator</td><td><code>getByRole('button', { name: 'Add to bag' })</code></td><td>Timeout sur l'action ; le call log dit « waiting for… »</td></tr>
+      <tr><td>Mauvaise valeur</td><td><code>toHaveText('$40.00')</code> au lieu de <code>$37.98</code></td><td>Diff attendu / reçu</td></tr>
+      <tr><td>Course</td><td><code>expect(await total.textContent()).toBe('$37.98')</code> sur le checkout</td><td>Lit « … » : la valeur avant la réponse de l'API</td></tr>
+    </table>
+  </div>
+
+  <div class="step">
+    <h3>Lire une trace</h3>
+<pre><code>npx playwright show-report                 # puis clic sur le test → onglet Trace
+npx playwright show-trace test-results/&lt;dossier&gt;/trace.zip</code></pre>
+    <ul>
+      <li><strong>Actions</strong> (à gauche) : chaque étape, avec sa durée. Clique sur celle qui a échoué.</li>
+      <li><strong>Before / After</strong> : snapshot du DOM, inspectable comme dans les DevTools.</li>
+      <li><strong>Network</strong> : retrouve <code>GET /api/products</code> et sa durée (~400 ms).</li>
+      <li><strong>Console</strong>, <strong>Source</strong>, <strong>Call</strong> : logs, ligne de code, paramètres.</li>
+    </ul>
+    <p>Une trace s'ouvre aussi sur <code>trace.playwright.dev</code>, par glisser-déposer : tout est traité localement dans ton navigateur.</p>
+  </div>
+
+  <div class="step">
+    <h3>Débogage interactif</h3>
+<pre><code>npx playwright test checkout --debug      # Inspector : pas à pas
+await page.pause()                        // point d'arrêt dans le code (avec --headed)</code></pre>
+  </div>
+
+  <div class="step">
+    <h3>Structurer le rapport avec test.step</h3>
+<pre><code>await test.step('Fill shipping information', async () =&gt; {
+  await checkout.fillShipping({ firstName: 'Ada', lastName: 'Lovelace', postalCode: '75001' })
+})</code></pre>
+  </div>
+
+  <div class="box todo"><strong>À toi</strong><ul>
+    <li>Pour chacun des 3 échecs, explique la cause <strong>à partir de la trace seule</strong>, sans relire le code.</li>
+    <li>Lance l'échec 3 avec <code>--repeat-each=20</code> : échoue-t-il toujours ?</li>
+    <li>Remets les trois tests au vert.</li>
+  </ul></div>
+</section>
+
+<!-- ============================ 8. NETWORK ============================ -->
+<section class="chapter">
+  <div class="kicker">Module 8</div>
+  <h1>Interception &amp; mock API</h1>
+  <div class="meta"><span><strong>Durée</strong> ~2 h</span><span><strong>Notions</strong> page.route, fulfill, fetch, waitForRequest, fixture request</span></div>
+
+  <h2>Partie A — Intercepter le réseau du navigateur</h2>
+
+  <div class="step">
+    <h3>Remplacer complètement une réponse</h3>
+<pre><code>test('shows mocked products', async ({ page }) =&gt; {
+  await page.route('**/api/products', (route) =&gt;       // AVANT le goto
+    route.fulfill({ json: [
+      { id: 98, name: 'Mocked Mug', price: 0.01, description: 'From the mock' },
+      { id: 99, name: 'Mocked Cap', price: 1.5, description: 'From the mock' },
+    ] })
+  )
+  await page.goto('/inventory.html')
+  await expect(page.getByTestId('product-card')).toHaveCount(2)
+  await expect(page.getByText('$0.01')).toBeVisible()
+})</code></pre>
+  </div>
+
+  <div class="step">
+    <h3>Modifier la vraie réponse</h3>
+<pre><code>await page.route('**/api/products', async (route) =&gt; {
+  const response = await route.fetch()                 // appel au vrai serveur
+  const products = await response.json()
+  products[0].name = 'Mocked Backpack'
+  await route.fulfill({ response, json: products })
+})</code></pre>
+  </div>
+
+  <div class="step">
+    <h3>Simuler une erreur et une latence</h3>
+<pre><code>// Erreur serveur
+await page.route('**/api/products', (route) =&gt;
+  route.fulfill({ status: 500, json: { error: 'Database down' } }))
+await page.goto('/inventory.html')
+await expect(page.getByRole('alert')).toHaveText('Could not load products: Database down')
+
+// Latence : vérifier l'état de chargement
+await page.route('**/api/products', async (route) =&gt; {
+  await new Promise((r) =&gt; setTimeout(r, 2000))
+  await route.continue()
+})
+await page.goto('/inventory.html')
+await expect(page.getByRole('status')).toHaveText('Loading products…')
+await expect(page.getByRole('status')).toBeHidden()</code></pre>
+  </div>
+
+  <div class="step">
+    <h3>Espionner une requête sans la mocker</h3>
+<pre><code>const orderRequest = page.waitForRequest(
+  (req) =&gt; req.url().endsWith('/api/orders') &amp;&amp; req.method() === 'POST')
+await page.getByRole('dialog').getByRole('button', { name: 'Confirm' }).click()
+const body = (await orderRequest).postDataJSON()
+expect(body).toEqual({
+  items: [1, 5],
+  shipping: { firstName: 'Ada', lastName: 'Lovelace', postalCode: '75001' },
+})</code></pre>
+    <div class="box warn"><strong>Ordre important</strong>Crée la promesse <code>waitForRequest</code> <em>avant</em> le clic, et fais l'<code>await</code> <em>après</em>. Sinon, la requête peut partir avant que tu l'écoutes.</div>
+  </div>
+
+  <h2>Partie B — Tester l'API directement</h2>
+  <div class="step">
+    <h3>Un fichier de tests API pur</h3>
+<span class="file">e2e/tests/api/products.spec.ts</span>
+<pre><code>import { test, expect } from '@playwright/test'
+
+test.use({ storageState: { cookies: [], origins: [] } })   // partir sans session
+
+test('health is public', async ({ request }) =&gt; {
+  const res = await request.get('/api/health')
+  expect(res.status()).toBe(200)
+  expect(await res.json()).toEqual({ status: 'ok' })
+})
+
+test('products require a session', async ({ request }) =&gt; {
+  expect((await request.get('/api/products')).status()).toBe(401)
+})
+
+test('logged-in user gets 6 products', async ({ request }) =&gt; {
+  await request.post('/api/login', { data: { username: 'standard_user', password: 'secret_sauce' } })
+  const res = await request.get('/api/products')          // le cookie est conservé
+  expect(res.ok()).toBeTruthy()
+  const products = await res.json()
+  expect(products).toHaveLength(6)
+  expect(products[0]).toEqual(expect.objectContaining({ id: expect.any(Number), name: expect.any(String) }))
+})</code></pre>
+  </div>
+
+  <div class="box todo"><strong>À toi</strong><ul>
+    <li>Liste vide <code>[]</code> : aucune carte. L'utilisateur voit une page blanche : note-le comme un bug UX.</li>
+    <li><code>POST /api/orders</code> mocké en <code>400 { error: 'Payment declined' }</code> : le message s'affiche sur le checkout.</li>
+    <li>API : <code>/api/products/999</code> → 404, commande sans <code>postalCode</code> → 400, commande valide → 201 avec <code>total</code> correct.</li>
+    <li><strong>Hybride</strong> : crée l'état par l'API, puis vérifie-le par l'UI.</li>
+  </ul></div>
+</section>
+
+<!-- ============================ 9. BROWSERS ============================ -->
+<section class="chapter">
+  <div class="kicker">Module 9</div>
+  <h1>Multi-navigateurs &amp; mobile</h1>
+  <div class="meta"><span><strong>Durée</strong> ~1 h 30</span><span><strong>Notions</strong> projects, devices, workers, isMobile, tags</span></div>
+
+  <div class="step">
+    <h3>La matrice de projets</h3>
+<pre><code>npx playwright install            # Firefox + WebKit</code></pre>
+<pre><code>const auth = { storageState: '.auth/user.json' }
+
+projects: [
+  { name: 'setup', testMatch: /.*\.setup\.ts/ },
+  { name: 'chromium', use: { ...devices['Desktop Chrome'], ...auth }, dependencies: ['setup'] },
+  { name: 'firefox',  use: { ...devices['Desktop Firefox'], ...auth }, dependencies: ['setup'] },
+  { name: 'webkit',   use: { ...devices['Desktop Safari'], ...auth }, dependencies: ['setup'] },
+  { name: 'mobile',   use: { ...devices['iPhone 13'], ...auth },      dependencies: ['setup'] },
+],</code></pre>
+<pre><code>npx playwright test                       # tout, en parallèle
+npx playwright test --project=firefox
+npx playwright test --workers=1           # compare la durée</code></pre>
+  </div>
+
+  <div class="step">
+    <h3>Le header s'adapte au mobile</h3>
+    <p>Sous 640 px, la nav est cachée derrière le bouton « Open menu », donc <code>openCart()</code> échoue sur le projet <code>mobile</code>. On corrige le <strong>POM</strong>, pas les tests :</p>
+<pre><code>async openCart() {
+  const burger = this.page.getByRole('button', { name: 'Open menu' })
+  if (await burger.isVisible()) await burger.click()
+  await this.cartLink.click()
+}</code></pre>
+    <div class="box tip"><strong>Exception à la règle « pas de if dans les POM »</strong>Ici, le <code>if</code> décrit le comportement de l'UI (responsive), pas une logique de test. C'est justement le genre de détail que le POM doit cacher.</div>
+  </div>
+
+  <div class="step">
+    <h3>Tests spécifiques et tags</h3>
+<pre><code>test('burger toggles the menu', { tag: '@mobile' }, async ({ page, isMobile }) =&gt; {
+  test.skip(!isMobile, 'Burger only exists on small screens')
+  await page.goto('/inventory.html')
+  const burger = page.getByRole('button', { name: 'Open menu' })
+  await expect(burger).toHaveAttribute('aria-expanded', 'false')
+  await burger.click()
+  await expect(page.getByRole('button', { name: 'Close menu' })).toHaveAttribute('aria-expanded', 'true')
+})</code></pre>
+<pre><code>npx playwright test --grep @mobile
+npx playwright test --grep-invert @slow</code></pre>
+  </div>
+
+  <div class="box todo"><strong>À toi</strong><ul>
+    <li>Toute la suite est verte sur les 4 projets.</li>
+    <li><code>--repeat-each=5</code> : aucun test ne dépend d'un autre.</li>
+    <li>Tague tes tests critiques <code>@smoke</code> et crée un script npm <code>test:smoke</code>.</li>
+  </ul></div>
+</section>
+
+<!-- ============================ 10. CI ============================ -->
+<section class="chapter">
+  <div class="kicker">Module 10</div>
+  <h1>Intégration GitHub Actions</h1>
+  <div class="meta"><span><strong>Durée</strong> ~1 h</span><span><strong>Notions</strong> workflow, artefacts, config CI, sharding</span></div>
+
+  <div class="step">
+    <h3>Publier le repo</h3>
+    <p>Crée un repo GitHub <strong>personnel</strong>, puis pousse tout <code>playwright-training/</code> (app + tests dans le même repo).</p>
+  </div>
+
+  <div class="step">
+    <h3>Adapter la config au CI</h3>
+<pre><code>workers: process.env.CI ? 2 : undefined,
+reporter: process.env.CI ? [['html'], ['github']] : 'html',   // 'github' annote les PR</code></pre>
+  </div>
+
+  <div class="step">
+    <h3>Le workflow</h3>
+<span class="file">.github/workflows/playwright.yml (à la racine du repo)</span>
+<pre><code>name: Playwright
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: e2e
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npx playwright install --with-deps     # navigateurs + libs système
+      - run: npx playwright test                    # webServer démarre demo-shop
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}                     # même (surtout) si rouge
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/              # relatif à la racine du repo
+          retention-days: 14</code></pre>
+  </div>
+
+  <div class="step">
+    <h3>Exploiter un run rouge</h3>
+    <ol>
+      <li>Casse un test, puis commit et push.</li>
+      <li>GitHub → Actions → le run → <em>Artifacts</em> → télécharge <code>playwright-report</code>.</li>
+      <li>Dézippe-le, lance <code>npx playwright show-report chemin/du/dossier</code>, puis ouvre la trace.</li>
+    </ol>
+  </div>
+
+  <div class="box todo"><strong>À toi (bonus)</strong><ul>
+    <li><strong>Sharding</strong> : <code>strategy.matrix.shard: [1/2, 2/2]</code> + <code>--shard=${{ matrix.shard }}</code>, reporter <code>blob</code>, puis un job <code>merge-reports</code>.</li>
+    <li><strong>GitLab CI</strong>, plus proche de ce que tu utilises au travail : un <code>.gitlab-ci.yml</code> avec l'image <code>mcr.microsoft.com/playwright:v&lt;ta-version&gt;-noble</code> et <code>artifacts: when: always</code>.</li>
+    <li>Ajoute le badge du workflow dans le README.</li>
+  </ul></div>
+  <div class="box warn"><strong>Piège</strong>La version de l'image Docker Playwright doit correspondre <em>exactement</em> à la version de <code>@playwright/test</code> de ton <code>package.json</code>.</div>
+</section>
+
+<!-- ============================ 11. BONUS ============================ -->
+<section class="chapter">
+  <div class="kicker">Bonus</div>
+  <h1>Visual regression &amp; accessibilité</h1>
+
+  <h2>Visual regression</h2>
+<pre><code>test('inventory looks right', async ({ page }) =&gt; {
+  await page.goto('/inventory.html')
+  await expect(page.getByTestId('product-card')).toHaveCount(6)   // page stable d'abord
+  await expect(page).toHaveScreenshot('inventory.png', { fullPage: true })
+})</code></pre>
+  <ul>
+    <li>Le 1<sup>er</sup> run crée la référence (et échoue) ; les suivants comparent pixel par pixel.</li>
+    <li>Change une couleur dans <code>demo-shop/public/styles.css</code> → regarde le diff dans le rapport.</li>
+    <li><code>npx playwright test --update-snapshots</code> pour accepter un changement voulu.</li>
+    <li><code>mask: [page.getByTestId('order-number')]</code> masque une zone variable.</li>
+    <li>Les références dépendent de l'OS et des polices : génère-les dans le même Docker que la CI.</li>
+  </ul>
+
+  <h2>Accessibilité</h2>
+<pre><code>npm i -D @axe-core/playwright</code></pre>
+<pre><code>import AxeBuilder from '@axe-core/playwright'
+
+test('checkout has no a11y violations', async ({ page }) =&gt; {
+  await page.goto('/checkout.html')
+  const results = await new AxeBuilder({ page }).analyze()
+  expect(results.violations).toEqual([])
+})</code></pre>
+  <p>Et pour verrouiller la structure d'un composant :</p>
+<pre><code>await expect(page.getByRole('dialog')).toMatchAriaSnapshot(`
+  - dialog "Confirm your order":
+    - heading "Confirm your order" [level=2]
+    - button "Cancel"
+    - button "Confirm"
+`)</code></pre>
+
+  <h2>Pour aller plus loin</h2>
+  <ul>
+    <li><code>globalSetup</code> vs projet <code>setup</code> : pourquoi le projet est recommandé (traces, fixtures, rapport).</li>
+    <li>Variables d'environnement (<code>process.env.BASE_URL</code>, <code>dotenv</code>) pour viser plusieurs environnements.</li>
+    <li><code>test.describe.configure({ mode: 'serial' })</code> : rarement une bonne idée. Préfère des tests indépendants.</li>
+    <li><code>testInfo.attach()</code>, reporters personnalisés, <code>expect.extend</code> pour des matchers métier.</li>
+  </ul>
+</section>
+
+<!-- ============================ CHEAT SHEET ============================ -->
+<section class="chapter">
+  <div class="kicker">Annexe</div>
+  <h1>Aide-mémoire</h1>
+
+  <h2>CLI</h2>
+  <table>
+    <tr><th>Commande</th><th>Effet</th></tr>
+    <tr><td><code>npx playwright test</code></td><td>Lance tout</td></tr>
+    <tr><td><code>npx playwright test login</code></td><td>Fichiers dont le nom contient « login »</td></tr>
+    <tr><td><code>-g "badge"</code> / <code>--grep @smoke</code></td><td>Filtre par titre / tag</td></tr>
+    <tr><td><code>--project=webkit</code></td><td>Un seul projet</td></tr>
+    <tr><td><code>--headed</code> · <code>--ui</code> · <code>--debug</code></td><td>Voir · UI mode · Inspector</td></tr>
+    <tr><td><code>--repeat-each=10</code> · <code>--workers=1</code></td><td>Chasse aux tests flaky · séquentiel</td></tr>
+    <tr><td><code>--last-failed</code></td><td>Relance seulement les échecs</td></tr>
+    <tr><td><code>--update-snapshots</code></td><td>Met à jour les screenshots de référence</td></tr>
+    <tr><td><code>npx playwright codegen &lt;url&gt;</code></td><td>Enregistre tes actions en code</td></tr>
+    <tr><td><code>npx playwright show-report</code> · <code>show-trace</code></td><td>Rapport HTML · trace</td></tr>
+  </table>
+
+  <h2>Locators</h2>
+<pre><code>page.getByRole('button', { name: 'Login' })          page.getByLabel('Username')
+page.getByText('Your cart is empty.')                page.getByTestId('cart-badge')
+locator.filter({ hasText: 'Backpack' })              locator.filter({ has: page.getByRole('heading') })
+locator.first() · .last() · .nth(2)                  locator.getByRole(...)   // chaînage</code></pre>
+
+  <h2>Actions</h2>
+<pre><code>click() · dblclick() · fill('x') · clear() · press('Enter') · check() · uncheck()
+selectOption('v') · hover() · setInputFiles('f.png') · dragTo(target) · focus()</code></pre>
+
+  <h2>Assertions</h2>
+<pre><code>toBeVisible · toBeHidden · toBeEnabled · toBeDisabled · toBeChecked · toBeFocused
+toHaveText · toContainText · toHaveCount · toHaveValue · toHaveAttribute · toHaveClass
+toHaveURL · toHaveTitle · toHaveScreenshot · toMatchAriaSnapshot
+expect.soft(...) · expect.poll(fn) · expect(...).not.toBeVisible()</code></pre>
+
+  <h2>Réseau</h2>
+<pre><code>page.route(url, route =&gt; route.fulfill({ status, json }) | route.continue() | route.abort())
+const res = await route.fetch()                    page.waitForRequest(pred) · waitForResponse(pred)
+request.get/post/put/delete(url, { data })         res.status() · res.ok() · res.json()</code></pre>
+
+  <h2>Les 7 péchés du débutant</h2>
+  <ol>
+    <li>Oublier un <code>await</code>.</li>
+    <li><code>waitForTimeout</code> au lieu d'une assertion.</li>
+    <li><code>expect(await x.textContent())</code> au lieu de <code>expect(x).toHaveText()</code>.</li>
+    <li>Sélecteurs CSS ou XPath couplés à l'implémentation.</li>
+    <li>Tests qui dépendent les uns des autres (ordre, données partagées).</li>
+    <li>Se connecter par l'UI dans chaque test.</li>
+    <li>Déclarer un <code>page.route</code> ou un <code>waitForRequest</code> <em>après</em> l'action qui déclenche la requête.</li>
+  </ol>
+
+  <h2>Documentation</h2>
+  <ul>
+    <li>playwright.dev/docs/intro : la doc officielle, très bien faite</li>
+    <li>playwright.dev/docs/best-practices</li>
+    <li>playwright.dev/docs/locators · /test-assertions · /auth · /mock · /test-fixtures</li>
+  </ul>
+</section>
+
+</body>
+</html>

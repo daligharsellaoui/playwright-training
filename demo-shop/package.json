@@ -1,0 +1,9 @@
+{
+  "name": "demo-shop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tiny e-shop used as the target app for the Playwright training",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

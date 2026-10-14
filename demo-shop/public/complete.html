@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo Shop — Order complete</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="app-header"></header>
+  <main>
+    <section class="card">
+      <h1>Thank you for your order!</h1>
+      <p>Your order number is <strong data-testid="order-number"></strong>.</p>
+      <a class="button" href="/inventory.html">Back to products</a>
+    </section>
+  </main>
+  <script src="/app.js"></script>
+  <script>
+    document.querySelector('[data-testid="order-number"]').textContent =
+      `#${new URLSearchParams(location.search).get('order') ?? '?'}`
+  </script>
+</body>
+</html>

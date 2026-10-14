@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo Shop — Cart</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="app-header"></header>
+  <main>
+    <h1>Your cart</h1>
+    <p id="loading" role="status">Loading cart…</p>
+    <p id="empty" hidden>Your cart is empty.</p>
+    <ul class="cart-list" aria-label="Cart items"></ul>
+    <p>Total: <strong data-testid="cart-total">$0.00</strong></p>
+    <div class="actions">
+      <a class="button" href="/inventory.html">Continue shopping</a>
+      <button type="button" class="secondary" id="clear-cart">Clear cart</button>
+      <button type="button" class="primary" id="checkout" disabled>Checkout</button>
+    </div>
+  </main>
+  <script src="/app.js"></script>
+  <script>
+    const list = document.querySelector('.cart-list')
+    let products = []
+
+    function render() {
+      const items = products.filter((p) => Cart.has(p.id))
+      document.getElementById('empty').hidden = items.length > 0
+      document.getElementById('checkout').disabled = items.length === 0
+      document.getElementById('clear-cart').disabled = items.length === 0
+      document.querySelector('[data-testid="cart-total"]').textContent = formatPrice(items.reduce((s, p) => s + p.price, 0))
+      list.replaceChildren(
+        ...items.map((p) =>
+          el(
+            'li',
+            { class: 'card cart-item', 'data-testid': 'cart-item' },
+            el('span', {}, p.name),
+            el('span', { class: 'price' }, formatPrice(p.price)),
+            el('button', { type: 'button', class: 'secondary', onClick: () => { Cart.remove(p.id); render() } }, 'Remove')
+          )
+        )
+      )
+    }
+
+    // Native browser dialog on purpose: handle it with page.on('dialog') in Playwright
+    document.getElementById('clear-cart').addEventListener('click', () => {
+      if (confirm('Remove all items from your cart?')) {
+        Cart.clear()
+        render()
+      }
+    })
+
+    document.getElementById('checkout').addEventListener('click', () => (location.href = '/checkout.html'))
+
+    api('/api/products')
+      .then((data) => {
+        products = data
+        render()
+      })
+      .finally(() => (document.getElementById('loading').hidden = true))
+  </script>
+</body>
+</html>

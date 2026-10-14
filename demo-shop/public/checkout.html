@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo Shop — Checkout</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="app-header"></header>
+  <main>
+    <h1>Checkout</h1>
+    <section class="card">
+      <h2>Shipping information</h2>
+      <form id="shipping-form" class="form" novalidate>
+        <div class="field">
+          <label for="first-name">First name</label>
+          <input id="first-name" name="firstName" autocomplete="given-name" aria-describedby="first-name-error">
+          <span class="field-error" id="first-name-error"></span>
+        </div>
+        <div class="field">
+          <label for="last-name">Last name</label>
+          <input id="last-name" name="lastName" autocomplete="family-name" aria-describedby="last-name-error">
+          <span class="field-error" id="last-name-error"></span>
+        </div>
+        <div class="field">
+          <label for="postal-code">Postal code</label>
+          <input id="postal-code" name="postalCode" autocomplete="postal-code" inputmode="numeric" aria-describedby="postal-code-error">
+          <span class="field-error" id="postal-code-error"></span>
+        </div>
+        <p>Order total: <strong data-testid="checkout-total">…</strong></p>
+        <div class="alert" role="alert" id="order-error" hidden></div>
+        <div class="actions">
+          <a class="button" href="/cart.html">Back to cart</a>
+          <button type="submit" class="primary" id="place-order" disabled>Place order</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- HTML modal on purpose: target it with getByRole('dialog') in Playwright -->
+    <dialog id="confirm-dialog" aria-labelledby="confirm-title">
+      <h2 id="confirm-title">Confirm your order</h2>
+      <p>You are about to pay <strong data-testid="confirm-total"></strong>.</p>
+      <div class="actions">
+        <button type="button" class="secondary" id="cancel-order">Cancel</button>
+        <button type="button" class="primary" id="confirm-order">Confirm</button>
+      </div>
+    </dialog>
+  </main>
+  <script src="/app.js"></script>
+  <script>
+    const form = document.getElementById('shipping-form')
+    const dialog = document.getElementById('confirm-dialog')
+    const orderError = document.getElementById('order-error')
+    let total = 0
+
+    const RULES = {
+      firstName: (v) => (v ? '' : 'First name is required'),
+      lastName: (v) => (v ? '' : 'Last name is required'),
+      postalCode: (v) => (!v ? 'Postal code is required' : /^\d{5}$/.test(v) ? '' : 'Postal code must be 5 digits'),
+    }
+
+    function validate() {
+      let valid = true
+      for (const [name, rule] of Object.entries(RULES)) {
+        const input = form[name]
+        const message = rule(input.value.trim())
+        input.setAttribute('aria-invalid', String(Boolean(message)))
+        document.getElementById(`${input.id}-error`).textContent = message
+        if (message) valid = false
+      }
+      return valid
+    }
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault()
+      orderError.hidden = true
+      if (!validate()) return
+      document.querySelector('[data-testid="confirm-total"]').textContent = formatPrice(total)
+      dialog.showModal()
+    })
+
+    document.getElementById('cancel-order').addEventListener('click', () => dialog.close())
+
+    document.getElementById('confirm-order').addEventListener('click', async () => {
+      dialog.close()
+      try {
+        const order = await api('/api/orders', {
+          method: 'POST',
+          body: {
+            items: Cart.get(),
+            shipping: {
+              firstName: form.firstName.value.trim(),
+              lastName: form.lastName.value.trim(),
+              postalCode: form.postalCode.value.trim(),
+            },
+          },
+        })
+        Cart.clear()
+        location.href = `/complete.html?order=${order.id}`
+      } catch (err) {
+        orderError.textContent = err.message
+        orderError.hidden = false
+      }
+    })
+
+    api('/api/products').then((products) => {
+      total = products.filter((p) => Cart.has(p.id)).reduce((s, p) => s + p.price, 0)
+      document.querySelector('[data-testid="checkout-total"]').textContent = formatPrice(total)
+      document.getElementById('place-order').disabled = false
+    })
+  </script>
+</body>
+</html>
