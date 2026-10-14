@@ -1,0 +1,20 @@
+{
+  "name": "demo-shop-e2e-solution",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:ui": "playwright test --ui",
+    "test:visual": "playwright test --project=visual",
+    "report": "playwright show-report",
+    "typecheck": "tsc -p .",
+    "test:ci": "playwright test --project=api --project=chromium --project=firefox --project=webkit --project=mobile"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "1.64.1",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.9.3"
+  }
+}
