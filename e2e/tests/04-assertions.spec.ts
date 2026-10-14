@@ -168,10 +168,9 @@ test.describe('web-first vs manual assertions', () => {
     await expect(page.getByTestId('product-card')).toHaveCount(6)
   })
 
-  test('manual assertion fails because it does not retry', async ({ page }) => {
+  test.fail('manual assertion fails because it does not retry', async ({ page }) => {
     // This demonstrates the anti-pattern - do not do this
     // The products load with 400ms latency; without waiting, count is 0
-    await page.getByRole('status').waitFor({ state: 'hidden' })
     const count = await page.getByTestId('product-card').count()
     expect(count).toBe(6)
   })
