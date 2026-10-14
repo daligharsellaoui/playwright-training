@@ -5,7 +5,11 @@ const auth = { storageState: AUTH_FILE }
 
 // UI specs that don't depend on the layout (desktop vs mobile header) run on every browser.
 // API and visual specs get their own project, so they don't run once per browser.
-const uiOnly = { testIgnore: [/api\//, /visual/, /\.setup\.ts/] }
+const uiOnly = { testIgnore: [/api\//, /visual/, /\.setup\.ts/, /09-mobile/] }
+
+// Modules 2-4 use raw locators on the desktop header on purpose; from module 5 on,
+// the Header page object handles the burger menu, so those specs run on mobile too.
+const mobileProjects = ['05-pom', '06-fixtures', '07-debug', '08-network', '09-browsers-mobile', '09-mobile']
 
 export default defineConfig({
   testDir: './tests',
@@ -30,6 +34,25 @@ export default defineConfig({
     // or explicitly opt in. Login tests override with test.use({ storageState: GUEST }).
     { name: 'chromium', use: { ...devices['Desktop Chrome'] }, dependencies: ['setup'], ...uiOnly },
     { name: 'chromium-auth', use: { ...devices['Desktop Chrome'], ...auth }, dependencies: ['setup'], ...uiOnly },
+
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] }, dependencies: ['setup'], ...uiOnly },
+    { name: 'firefox-auth', use: { ...devices['Desktop Firefox'], ...auth }, dependencies: ['setup'], ...uiOnly },
+
+    { name: 'webkit', use: { ...devices['Desktop Safari'] }, dependencies: ['setup'], ...uiOnly },
+    { name: 'webkit-auth', use: { ...devices['Desktop Safari'], ...auth }, dependencies: ['setup'], ...uiOnly },
+
+    {
+      name: 'mobile',
+      use: { ...devices['iPhone 13'] },
+      dependencies: ['setup'],
+      testMatch: mobileProjects.map((p) => new RegExp(`${p}.*\\.spec\\.ts`)),
+    },
+    {
+      name: 'mobile-auth',
+      use: { ...devices['iPhone 13'], ...auth },
+      dependencies: ['setup'],
+      testMatch: mobileProjects.map((p) => new RegExp(`${p}.*\\.spec\\.ts`)),
+    },
   ],
   webServer: {
     command: 'npm start --prefix ../demo-shop',
