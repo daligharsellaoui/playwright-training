@@ -1,0 +1,11 @@
+import { test, expect } from '@playwright/test'
+
+test('home page has the Demo Shop title', { tag: '@smoke' }, async ({ page }) => {
+  await page.goto('/')
+  await expect(page).toHaveTitle(/Demo Shop/)
+})
+
+test('health endpoint answers', { tag: '@smoke' }, async ({ page }) => {
+  const response = await page.goto('/api/health')
+  expect(response?.ok()).toBe(true)
+})
